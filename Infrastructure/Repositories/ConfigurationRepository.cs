@@ -19,7 +19,7 @@ namespace Infrastracture.Repositories
             _context.SaveChanges();
         }
 
-        public UserConfiguration LoadConfiguration(Guid configId)
+        public UserConfiguration? LoadConfiguration(Guid configId)
         {
             return _context.UserConfigurations
                 .Include(c => c.SelectedCity)

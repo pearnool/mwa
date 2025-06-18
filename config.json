@@ -1,6 +1,0 @@
-{
-    "EnabledParameters": [
-        { "ParameterType": "Temperature" },
-        { "ParameterType": "Humidity" }
-    ]
-}

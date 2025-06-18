@@ -6,64 +6,67 @@ using Npgsql;
 using Domain.Entities;
 public class Program
 {
-    static void Main(string[] args)
+    public static void Main()
     {
-        // Path to your JSON file
-        string jsonFilePath = "new.json"; // Update the path accordingly
+        // Step 1: Read the JSON file
+        string jsonFilePath = "new.json";
+        string jsonData = File.ReadAllText(jsonFilePath);
+        var userConfigurations = JsonConvert.DeserializeObject<Dictionary<string, List<UserConfiguration>>>(jsonData, new JsonSerializerSettings
+        {
+            Converters = new List<JsonConverter> { new GuidConverter() }
+        });
 
-        // Read and deserialize JSON data
-        var jsonString = File.ReadAllText(jsonFilePath);
-        var userConfigurations = JsonConvert.DeserializeObject<UserConfigurationList>(jsonString);
-
-        // Connect to PostgreSQL
-        var connectionString = "Host=localhost;Database=YourDatabase;Username=YourUsername;Password=YourPassword"; // Update with your credentials
-
+        // Step 2: Connect to PostgreSQL
+        var connectionString = "Host=localhost;Username=postgres;Password=balls;Database=balls";
         using (var connection = new NpgsqlConnection(connectionString))
         {
             connection.Open();
 
-            foreach (var config in userConfigurations.UserConfigurations)
+            // Step 3: Insert Data
+            foreach (var userConfig in userConfigurations["User  Configurations"])
             {
-                // Insert or update the city
-                if (config.SelectedCity != null)
-                {
-                    using (var command = new NpgsqlCommand("INSERT INTO Cities (Id, Name) VALUES (@Id, @Name) ON CONFLICT (Id) DO UPDATE SET Name = EXCLUDED.Name", connection))
-                    {
-                        command.Parameters.AddWithValue("Id", config.SelectedCity.Id);
-                        command.Parameters.AddWithValue("Name", config.SelectedCity.Name);
-                        command.ExecuteNonQuery();
-                    }
-                }
+                // Insert User Configuration
+                var insertCommand = new NpgsqlCommand("INSERT INTO user_configurations (id, selected_city_id, temperature_unit, forecast_days_ahead, enable_notifications, notify_high_pressure, notify_high_rain_probability) VALUES (@id, @selectedCityId, @temperatureUnit, @forecastDaysAhead, @enableNotifications, @notifyHighPressure, @notifyHighRainProbability)", connection);
+                insertCommand.Parameters.AddWithValue("id", userConfig.Id);
+                insertCommand.Parameters.AddWithValue("selectedCityId", userConfig.SelectedCity?.Id);
+                insertCommand.Parameters.AddWithValue("temperatureUnit", userConfig.TemperatureUnit.ToString());
+                insertCommand.Parameters.AddWithValue("forecastDaysAhead", userConfig.ForecastDaysAhead);
+                insertCommand.Parameters.AddWithValue("enableNotifications", userConfig.NotificationSetting?.EnableNotifications);
+                insertCommand.Parameters.AddWithValue("notifyHighPressure", userConfig.NotificationSetting?.NotifyHighPressure);
+                insertCommand.Parameters.AddWithValue("notifyHighRainProbability", userConfig.NotificationSetting?.NotifyHighRainProbability);
 
-                // Insert or update the user configuration
-                using (var command = new NpgsqlCommand("INSERT INTO UserConfigurations (Id, TemperatureUnit, ForecastDaysAhead, EnableNotifications, NotifyHighPressure, NotifyHighRainProbability) VALUES (@Id, @TemperatureUnit, @ForecastDaysAhead, @EnableNotifications, @NotifyHighPressure, @NotifyHighRainProbability) ON CONFLICT (Id) DO UPDATE SET TemperatureUnit = EXCLUDED.TemperatureUnit, ForecastDaysAhead = EXCLUDED.ForecastDaysAhead, EnableNotifications = EXCLUDED.EnableNotifications, NotifyHighPressure = EXCLUDED.NotifyHighPressure, NotifyHighRainProbability = EXCLUDED.NotifyHighRainProbability", connection))
-                {
-                    command.Parameters.AddWithValue("Id", config.Id);
-                    command.Parameters.AddWithValue("TemperatureUnit", config.TemperatureUnit);
-                    command.Parameters.AddWithValue("ForecastDaysAhead", config.ForecastDaysAhead);
-                    command.Parameters.AddWithValue("EnableNotifications", config.NotificationSetting.EnableNotifications);
-                    command.Parameters.AddWithValue("NotifyHighPressure", config.NotificationSetting.NotifyHighPressure);
-                    command.Parameters.AddWithValue("NotifyHighRainProbability", config.NotificationSetting.NotifyHighRainProbability);
-                    command.ExecuteNonQuery();
-                }
+                insertCommand.ExecuteNonQuery();
 
-                // Insert or update enabled parameters
-                if (config.EnabledParameters != null)
+                // Insert Enabled Parameters
+                foreach (var param in userConfig.EnabledParameters)
                 {
-                    foreach (var param in config.EnabledParameters)
-                    {
-                        using (var command = new NpgsqlCommand("INSERT INTO EnabledParameters (Id, ParameterType, UserConfigurationId) VALUES (@Id, @ParameterType, @User ConfigurationId) ON CONFLICT (Id) DO UPDATE SET ParameterType = EXCLUDED.ParameterType, UserConfigurationId = EXCLUDED.UserConfigurationId", connection))
-                        {
-                            command.Parameters.AddWithValue("Id", param.Id);
-                            command.Parameters.AddWithValue("ParameterType", param.ParameterType);
-                            command.Parameters.AddWithValue("User ConfigurationId", param.UserConfigurationId);
-                            command.ExecuteNonQuery();
-                        }
-                    }
+                    var paramInsertCommand = new NpgsqlCommand("INSERT INTO enabled_parameters (id, parameter_type, user_configuration_id) VALUES (@id, @parameterType, @userConfigurationId)", connection);
+                    paramInsertCommand.Parameters.AddWithValue("id", param.Id);
+                    paramInsertCommand.Parameters.AddWithValue("parameterType", param.ParameterType.ToString());
+                    paramInsertCommand.Parameters.AddWithValue("userConfigurationId", param.UserConfigurationId);
+
+                    paramInsertCommand.ExecuteNonQuery();
                 }
             }
-
-            Console.WriteLine("Migration completed successfully.");
         }
+    }
+}
+
+public class GuidConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType)
+    {
+        return objectType == typeof(Guid);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        string value = (string)reader.Value;
+        return Guid.TryParse(value, out Guid guid) ? guid : Guid.Empty; // Handle invalid GUIDs
+    }
+
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        writer.WriteValue(value.ToString());
     }
 }

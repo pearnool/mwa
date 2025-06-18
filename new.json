@@ -1,0 +1,25 @@
+{
+    "User Configurations": [
+        {
+            "Id": "2",
+            "SelectedCity": {
+                "Id": "1",
+                "Name": "New York"
+            },
+            "EnabledParameters": [
+                {
+                    "Id": "1",
+                    "ParameterType": "Temperature",
+                    "User ConfigurationId": "2"
+                }
+            ],
+            "TemperatureUnit": "Celsius",
+            "ForecastDaysAhead": 3,
+            "NotificationSetting": {
+                "EnableNotifications": true,
+                "NotifyHighPressure": false,
+                "NotifyHighRainProbability": true
+            }
+        }
+    ]
+}

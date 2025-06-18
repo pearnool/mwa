@@ -18,7 +18,7 @@ namespace Domain.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-        
+            //emplty for a whilr
         }
     }
 }

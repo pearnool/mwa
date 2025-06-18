@@ -16,13 +16,13 @@ namespace Domain.Services{
         }
         public void EvaluateNotifications()
         {
-            // Example logic to evaluate notifications based on enabled parameters
+            //logic to evaluate notifications based on enabled parameters
             foreach (var enabledParameter in _userConfiguration.EnabledParameters)
             {
-                // Here you would typically check the current weather data
+                // check the current weather data
                 var currentWeather = GetCurrentWeather(enabledParameter.ParameterType);
 
-                // Evaluate based on the current weather and the enabled parameter
+                //  evaluate based on the current weather and the enabled parameter
                 if (ShouldNotify(currentWeather, enabledParameter))
                 {
                     SendNotification(enabledParameter);
@@ -32,12 +32,10 @@ namespace Domain.Services{
 
         private WeatherParameter GetCurrentWeather(WeatherParameterType parameterType)
         {
-            // Placeholder for actual weather data retrieval logic
-            // This should return the current weather data based on the parameter type
-            // For example, let's assume we have a method that fetches the current weather
+
             return new WeatherParameter
             {
-                // Populate with actual weather data
+                // ppopulate with actual weather data
                 Id = Guid.Parse("0"),
                 Type = WeatherParameterType.Temperature,
                 Value = 33f
@@ -46,13 +44,12 @@ namespace Domain.Services{
 
         private bool ShouldNotify(WeatherParameter currentWeather, EnabledParameter enabledParameter)
         {
-            // Implement your notification logic based on current weather and enabled parameter
             switch (enabledParameter.ParameterType)
             {
                 case WeatherParameterType.Temperature:
                     return currentWeather.Value > 30; // Example condition
 
-                // Add cases for other weather parameters as needed
+                // Add cases for other cases (empty for a while)
 
                 default:
                     return false;
@@ -61,7 +58,7 @@ namespace Domain.Services{
 
         private void SendNotification(EnabledParameter enabledParameter)
         {
-            // Implement your notification sending logic here
+            // implementation is gonna be here
             Console.WriteLine($"Notification: {enabledParameter.ParameterType} is triggered.");
         }
     }

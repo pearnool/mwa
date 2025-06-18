@@ -18,7 +18,7 @@ namespace Domain.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure your entity relationships here if needed
+        
         }
     }
 }

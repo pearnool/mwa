@@ -8,7 +8,7 @@ public class Program
 {
     public static void Main()
     {
-        // Step 1: Read the JSON file
+        //raad the JSON file
         string jsonFilePath = "new.json";
         string jsonData = File.ReadAllText(jsonFilePath);
         var userConfigurations = JsonConvert.DeserializeObject<Dictionary<string, List<UserConfiguration>>>(jsonData, new JsonSerializerSettings
@@ -16,16 +16,15 @@ public class Program
             Converters = new List<JsonConverter> { new GuidConverter() }
         });
 
-        // Step 2: Connect to PostgreSQL
+        // postgres connection;
         var connectionString = "Host=localhost;Username=postgres;Password=balls;Database=balls";
         using (var connection = new NpgsqlConnection(connectionString))
         {
             connection.Open();
 
-            // Step 3: Insert Data
+            //data insertion
             foreach (var userConfig in userConfigurations["User  Configurations"])
             {
-                // Insert User Configuration
                 var insertCommand = new NpgsqlCommand("INSERT INTO user_configurations (id, selected_city_id, temperature_unit, forecast_days_ahead, enable_notifications, notify_high_pressure, notify_high_rain_probability) VALUES (@id, @selectedCityId, @temperatureUnit, @forecastDaysAhead, @enableNotifications, @notifyHighPressure, @notifyHighRainProbability)", connection);
                 insertCommand.Parameters.AddWithValue("id", userConfig.Id);
                 insertCommand.Parameters.AddWithValue("selectedCityId", userConfig.SelectedCity?.Id);
@@ -37,7 +36,6 @@ public class Program
 
                 insertCommand.ExecuteNonQuery();
 
-                // Insert Enabled Parameters
                 foreach (var param in userConfig.EnabledParameters)
                 {
                     var paramInsertCommand = new NpgsqlCommand("INSERT INTO enabled_parameters (id, parameter_type, user_configuration_id) VALUES (@id, @parameterType, @userConfigurationId)", connection);
